@@ -55,10 +55,4 @@ router.post('/login', async (req, res) => {
   res.json(user.toAuthJSON());
 });
 
-router.get('/test', authRequired, (req, res) => {
-  res.json({
-    status: 'success'
-  });
-});
-
 module.exports = router;

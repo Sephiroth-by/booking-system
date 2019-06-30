@@ -8,35 +8,37 @@ router.get('/:movieId', authMiddleware, async (req, res) => {
 
   if (!movieId) {
     return res.status(400).json({
-      error: 'Movie id missing'
+      error: 'Movie id missing',
     });
   }
 
   const movie = await Movie.findOne({
-    _id: movieId
+    _id: movieId,
   });
+
+  if(!movie) {
+    res.status(404).json({
+      error: 'No movie found',
+    });
+  }
 
   const sessions = await Session.find({
     $and: [
       {
-        movieId: movie._id
+        movieId: movie._id,
       },
       {
-        schedule: {
-          $elemMatch: {
-            startTime: {
-              $gt: new Date().toISOString()
-            }
-          }
-        }
-      }
-    ]
+        startTime: {
+          $gt: new Date().toISOString(),
+        },
+      },
+    ],
   });
 
   const data = {
     movie: movie,
-    sessions: sessions
-  }
+    sessions: sessions,
+  };
 
   res.json(data);
 });
