@@ -1,26 +1,16 @@
 const mongoose = require('mongoose');
 const {Schema} = mongoose;
 
-const ReservationSchema = new Schema({
-  seats: [[Number]],
-  total: Number
-});
-
 const SessionSchema = new Schema({
-  cinema: {
-    type: Schema.Types.ObjectId,
-    ref: 'Cinema'
-  },
-  movie: {
-    type: Schema.Types.ObjectId,
-    ref: 'Movie'
-  },
-  startDate: Date,
-  endDate: Date,
-  price: Number,
-  seatsAvailable: Number,
-  seats: [[Number]],
-  reservations: [ReservationSchema]
+  cinemaId: Schema.Types.ObjectId,
+  movieId: Schema.Types.ObjectId,
+  schedule: [{
+    startTime: Date,
+    endTime: Date,
+    price: Number,
+    seats: [[Number]],
+    seatsAvailable: Number,
+  }]
 });
 
 module.exports = mongoose.model('Session', SessionSchema);

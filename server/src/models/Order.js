@@ -2,14 +2,8 @@ const mongoose = require('mongoose');
 const {Schema} = mongoose;
 
 const OrderSchema = new Schema({
-  user: {
-    type: Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  session: {
-    type: Schema.Types.ObjectId,
-    ref: 'Session'
-  },
+  userId: Schema.Types.ObjectId,
+  sessionId: Schema.Types.ObjectId,
   seats: [[Number]],
   total: Number,
   createdDate: Date,
