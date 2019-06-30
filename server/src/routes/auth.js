@@ -1,7 +1,4 @@
-const mongoose = require('mongoose');
-const passport = require('passport');
 const router = require('express').Router();
-const auth = require('./auth');
 const User = require('../models/User');
 const authRequired = require('../helpers/authMiddleware');
 
@@ -29,11 +26,10 @@ router.post('/register', async (req, res) => {
   user.setPassword(password);
   await user.save();
 
-  //TODO: req.login()
   res.json(user.toAuthJSON());
 });
 
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -42,7 +38,7 @@ router.post('/login', (req, res) => {
     });
   }
 
-  const user = User.findOne({ email: email });
+  const user = await User.findOne({ email: email });
 
   if (!user) {
     res.status(400).json({

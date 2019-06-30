@@ -1,19 +1,19 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-const getUserFromAuthHeader = (req) => {
-  let token = req.headers['x-access-token'] || req.headers['authorization'];
-  if (!token.startsWith('Bearer ')) {
+const getUserFromAuthHeader = async (req) => {
+  let token = req.headers['authorization'];
+  if (!token || !token.split(' ')[0] === 'Bearer') {
     return null;
   }
-  token = token.slice(7, token.length);
+  token = token.split(' ')[1];
   const decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
-  const user = User.find({ email: decodedToken.email });
+  const user = await User.findOne({ email: decodedToken.email });
   return user;
 };
 
-const authRequired = (req, res, next) => {
-  const user = getUserFromAuthHeader(req);
+const authRequired = async (req, res, next) => {
+  const user = await getUserFromAuthHeader(req);
   if (!user) {
     res.status(403).json({
       error: 'Authentication required'
