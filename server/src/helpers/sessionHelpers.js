@@ -1,7 +1,7 @@
 const Session = require('../models/Session');
 const Movie = require('../models/Movie');
 const Cinema = require('../models/Cinema');
-const User = require('../models/User');
+const Order = require('../models/Order');
 
 const createSession = async (cinemaId, movieId, startDate, endDate, price) => {
   const cinema = await Cinema.findOne({ '_id': cinemaId });
@@ -19,19 +19,22 @@ const createSession = async (cinemaId, movieId, startDate, endDate, price) => {
       reservations: [],
     });
 
-    await session.save();
+    const result = await session.save();
+
+    return result;
   }
+  return null;
 };
 
-const reserveSeat = async (sessionId, userId, seats) => {
+const reserveSeat = async (sessionId, orderId, userId, seats) => {
   //ex. seats = [[1, 5], [1, 6]];
   let seatsQuery = [];
   let setSeatsSelection = {};
 
   const session = await Session.findOne({ '_id': sessionId });
-  const user = await User.findOne({ '_id': userId });
+  const order = await Order.findOne({ '_id': orderId });
 
-  if (session && user) {
+  if (session && order && order.userId.equals(userId)) {
     for (let i = 0; i < seats.length; i++) {
       let seatSelector = {};
       let seatSelection = 'seats.' + seats[i][0] + '.' + seats[i][1];
@@ -50,7 +53,7 @@ const reserveSeat = async (sessionId, userId, seats) => {
       $inc: { seatsAvailable: -seats.length },
       $push: {
         reservations: {
-          userId: userId,
+          orderId: order._id,
           seats: seats,
           price: session.price,
           total: session.price * seats.length,
@@ -60,15 +63,19 @@ const reserveSeat = async (sessionId, userId, seats) => {
 
     if (result.nModified === 0) {
       console.log('Failed to reserve seats');
+      return null;
     }
 
     if (result.nModified === 1) {
       console.log('Reservation was successful');
+      result.orderId = order._id;
+      return result;
     }
   }
+  return null;
 };
 
-const releaseSeat = async (sessionId, userId, seats) => {
+const releaseSeat = async (sessionId, orderId, seats) => {
   //ex. seats = [[1, 5], [1, 6]];
   let setSeatsSelection = {};
 
@@ -76,43 +83,57 @@ const releaseSeat = async (sessionId, userId, seats) => {
     setSeatsSelection['seats.' + seats[i][0] + '.' + seats[i][1]] = 0;
   }
 
-  const session = await Session.findOne({'_id': sessionId});
-  const user = await User.findOne({'_id': userId});
+  let result = await Session.updateOne({
+    _id: sessionId,
+  }, {
+    $set: setSeatsSelection,
+    $pull: { reservations: { orderId: orderId } },
+  });
 
-  if(session && user) {
-    let result = await session.updateOne({
-      _id: sessionId,
-    }, {
-      $set: setSeatsSelection,
-      $pull: { reservations: { _id: userId } },
-    });
+  if(result.nModified === 0) {
+    console.log('Failed to release reservation');
+  }
 
-    if(result.nModified === 0) {
-      console.log('Failed to release reservation');
-    }
-
-    if(result.nModified === 1) {
-      console.log('Succeded in releasing reservation');
-    }
+  if(result.nModified === 1) {
+    console.log('Succeded in releasing reservation');
   }
 };
 
-const removeUserReservation = async (userId, sessionId) => {
-  const session = await Session.findOne({'_id': sessionId});
-  const user = await User.findOne({'_id': userId});
+const removeUserReservation = async (orderId) => {
+  const result = await Session.updateMany({
+    'reservations.orderId': orderId,
+  }, {
+    $pull: { reservations: { orderId: orderId } },
+  });
+  return result;
+};
 
-  if(user && session) {
-    await session.updateOne({
-      $and: [{
-        '_id': sessionId,
+const expireCart = async function (orderId) {
+  const order = await Order.findOne({'_id': orderId});
+  if(order.state !== 'SUBMITTED') {
+    for(let i = 0; i < order.reservations.length; i++) {
+      let reservation = order.reservations[i];
+      let seats = reservation.seats;
+      let setSeatsSelection = {};
+
+      for(let i = 0; i < seats.length; i++) {
+        setSeatsSelection['seats.' + seats[i][0] + '.' + seats[i][1]] = 0;
+      }
+
+      // Release seats and remove reservation
+      // eslint-disable-next-line no-await-in-loop
+      await Session.updateOne({
+        _id: reservation.sessionId,
       },
       {
-        'reservations.userId': userId,
-      },
-      ],
-    }, {
-      $pull: { reservations: { userId: userId } },
-    }, false, true);
+        $set: setSeatsSelection,
+        $pull: { reservations: { orderId: order._id }},
+      });
+    }
+
+    order.state = 'EXPIRED';
+
+    await order.save();
   }
 };
 
@@ -121,4 +142,5 @@ module.exports = {
   reserveSeat,
   releaseSeat,
   removeUserReservation,
+  expireCart,
 };

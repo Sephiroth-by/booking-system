@@ -16,11 +16,11 @@ const authRequired = async (req, res, next) => {
   const user = await getUserFromAuthHeader(req);
   if (!user) {
     res.status(403).json({
-      error: 'Authentication required'
+      error: 'Authentication required',
     });
   }
   req.user = user;
   next();
-}
+};
 
 module.exports = authRequired;

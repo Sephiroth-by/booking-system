@@ -10,10 +10,10 @@ const SessionSchema = new Schema({
   seats: [[Number]],
   seatsAvailable: Number,
   reservations: [{
-    userId: Schema.Types.ObjectId,
+    orderId: Schema.Types.ObjectId,
     seats: [[Number]],
     price: Number,
-    total: Number
+    total: Number,
   }],
 });
 

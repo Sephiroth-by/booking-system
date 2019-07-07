@@ -1,26 +1,22 @@
 const router = require('express').Router();
 const User = require('../models/User');
-const authRequired = require('../helpers/authMiddleware');
+const {sendBadRequest} = require('../helpers/responseHelpers');
 
 router.post('/register', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({
-      error: 'Email and Password mandatory'
-    });
+    return sendBadRequest(res, 'Email and Password mandatory');
   }
 
   const userExists = await User.findOne({ email: email });
 
   if (userExists) {
-    return res.status(400).json({
-      error: 'User already exists'
-    });
+    return sendBadRequest(res, 'User already exists');
   }
 
   const user = new User({
-    email: email
+    email: email,
   });
 
   user.setPassword(password);
@@ -33,23 +29,17 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({
-      error: 'Email and Password mandatory'
-    });
+    return sendBadRequest(res, 'Email and Password mandatory');
   }
 
   const user = await User.findOne({ email: email });
 
   if (!user) {
-    res.status(400).json({
-      error: 'No user found'
-    });
+    return sendBadRequest(res, 'No user found');
   }
 
   if(!user.validatePassword(password)) {
-    res.status(400).json({
-      error: 'Wrong password'
-    });
+    return sendBadRequest(res, 'Wrong password');
   }
 
   res.json(user.toAuthJSON());
