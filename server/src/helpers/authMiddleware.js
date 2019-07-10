@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const GeneralError = require('../helpers/generalError');
 
 const getUserFromAuthHeader = async (req) => {
   let token = req.headers['authorization'];
@@ -15,12 +16,11 @@ const getUserFromAuthHeader = async (req) => {
 const authRequired = async (req, res, next) => {
   const user = await getUserFromAuthHeader(req);
   if (!user) {
-    res.status(403).json({
-      error: 'Authentication required',
-    });
+    let error = new GeneralError('Authentication required', 403);
+    return next(error);
   }
   req.user = user;
-  next();
+  return next();
 };
 
 module.exports = authRequired;

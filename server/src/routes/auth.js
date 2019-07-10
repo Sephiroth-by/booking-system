@@ -1,18 +1,20 @@
 const router = require('express').Router();
 const User = require('../models/User');
-const {sendBadRequest} = require('../helpers/responseHelpers');
+const GeneralError = require('../helpers/generalError');
 
-router.post('/register', async (req, res) => {
+router.post('/register', async (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return sendBadRequest(res, 'Email and Password mandatory');
+    let error = new GeneralError('Email and Password mandatory', 400);
+    return next(error);
   }
 
   const userExists = await User.findOne({ email: email });
 
   if (userExists) {
-    return sendBadRequest(res, 'User already exists');
+    let error = new GeneralError('User already exists', 400);
+    return next(error);
   }
 
   const user = new User({
@@ -25,21 +27,24 @@ router.post('/register', async (req, res) => {
   res.json(user.toAuthJSON());
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', async (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return sendBadRequest(res, 'Email and Password mandatory');
+    let error = new GeneralError('Email and Password mandatory', 400);
+    return next(error);
   }
 
   const user = await User.findOne({ email: email });
 
   if (!user) {
-    return sendBadRequest(res, 'No user found');
+    let error = new GeneralError('No user found', 400);
+    return next(error);
   }
 
   if(!user.validatePassword(password)) {
-    return sendBadRequest(res, 'Wrong password');
+    let error = new GeneralError('Wrong password', 400);
+    return next(error);
   }
 
   res.json(user.toAuthJSON());

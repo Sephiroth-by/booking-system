@@ -1,37 +1,87 @@
 const router = require('express').Router();
 const authMiddleware = require('../helpers/authMiddleware');
-const {createSession, reserveSeat, releaseSeat, expireCart} = require('../helpers/sessionHelpers');
-const {updateOrder, createInitialOrder} = require('../helpers/orderHelpers');
-const {sendBadRequest} = require('../helpers/responseHelpers');
+const { createSession } = require('../helpers/sessionHelpers');
+const GeneralError = require('../helpers/generalError');
 const Movie = require('../models/Movie');
 const Session = require('../models/Session');
 
-router.get('/:movieId', authMiddleware, async (req, res) => {
+router.post('/', authMiddleware, async (req, res, next) => {
+  const { cinemaId, movieId, startDate, endDate, price } = req.body;
+  const session = await createSession(cinemaId, movieId, startDate, endDate, price);
+  if (!session) {
+    let error = new GeneralError('Invalid input', 400);
+    return next(error);
+  }
+  res.json(session);
+});
+
+router.get('/:movieId', async (req, res, next) => {
   const movieId = req.params.movieId;
 
   if (!movieId) {
-    return sendBadRequest(res, 'Movie id missing');
+    let error = new GeneralError('Movie id missing', 400);
+    return next(error);
   }
 
   const movie = await Movie.findOne({
     _id: movieId,
   });
 
-  if(!movie) {
-    return sendBadRequest(res, 'No movie found');
+  if (!movie) {
+    let error = new GeneralError('No movie found', 400);
+    return next(error);
   }
 
-  const sessions = await Session.find({
-    $and: [
-      {
-        movieId: movie._id,
+  const sessions = await Session.aggregate([
+    {
+      $match: {
+        $and: [
+          {
+            movieId: movie._id,
+          },
+          {
+            startTime: {
+              $gt: new Date(),
+            },
+          },
+          {
+            seatsAvailable: {
+              $gt: 0,
+            },
+          },
+        ],
       },
+    },
+    {
+      $lookup:
       {
-        startTime: {
-          $gt: new Date().toISOString(),
+        from: 'cinemas',
+        localField: 'cinemaId',
+        foreignField: '_id',
+        as: 'cinema',
+      },
+    },
+    {
+      $unwind: {
+        path: '$cinema',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $project: {
+        reservations: 0,
+        cinema: {
+          seats: 0,
+          seatsAvailable: 0,
         },
       },
-    ],
+    },
+  ]);
+
+  sessions.forEach((session) => {
+    session.time = session.startTime.getHours() + ':' + session.startTime.getMinutes();
+    session.day = session.startTime.toLocaleDateString();
+    session.duration = Math.round((session.endTime.getTime() - session.startTime.getTime())/ 60000);
   });
 
   const data = {
@@ -40,46 +90,6 @@ router.get('/:movieId', authMiddleware, async (req, res) => {
   };
 
   res.json(data);
-});
-
-router.post('/', authMiddleware, async (req, res) => {
-  const {cinemaId, movieId, startDate, endDate, price} = req.body;
-  const session = await createSession(cinemaId, movieId, startDate, endDate, price);
-  if(!session) {
-    return sendBadRequest(res, 'Invalid input');
-  }
-  res.json(session);
-});
-
-//Reserve seat
-router.put('/', authMiddleware, async (req, res) => {
-  const userId = req.user._id;
-  let {sessionId, orderId, seats} = req.body;
-
-  if (!orderId) {
-    const order = await createInitialOrder(userId);
-    orderId = order._id;
-  }
-
-  const session = await reserveSeat(sessionId, orderId, userId, seats);
-  if(!session) {
-    return sendBadRequest(res, 'Invalid input');
-  }
-  const order = await updateOrder(session.orderId, sessionId, userId, seats);
-  if(!order) {
-    await releaseSeat(sessionId, orderId, seats);
-    res.json({
-      success: false,
-      order: order,
-    });
-  }
-  else {
-    setTimeout(expireCart.bind(this, orderId), 300000);
-    res.json({
-      success: true,
-      order: order,
-    });
-  }
 });
 
 module.exports = router;

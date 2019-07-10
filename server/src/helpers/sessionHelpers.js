@@ -11,8 +11,8 @@ const createSession = async (cinemaId, movieId, startDate, endDate, price) => {
     const session = new Session({
       cinemaId: cinema._id,
       movieId: movie._id,
-      startTime: startDate.toISOString(),
-      endTime: endDate.toISOString(),
+      startTime: startDate,
+      endTime: endDate,
       price: price,
       seats: cinema.seats,
       seatsAvailable: cinema.seatsAvailable,
@@ -108,7 +108,7 @@ const removeUserReservation = async (orderId) => {
   return result;
 };
 
-const expireCart = async function (orderId) {
+const expireCart = async (orderId) => {
   const order = await Order.findOne({'_id': orderId});
   if(order.state !== 'SUBMITTED') {
     for(let i = 0; i < order.reservations.length; i++) {
@@ -127,6 +127,7 @@ const expireCart = async function (orderId) {
       },
       {
         $set: setSeatsSelection,
+        $inc: { seatsAvailable: seats.length },
         $pull: { reservations: { orderId: order._id }},
       });
     }

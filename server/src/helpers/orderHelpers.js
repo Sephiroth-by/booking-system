@@ -1,8 +1,21 @@
 const Session = require('../models/Session');
 const Order = require('../models/Order');
 
-const createInitialOrder = async (userId) => {
-  const order = new Order({
+const createInitialOrderOrGetCurrent = async (userId) => {
+  let order = await Order.findOne({
+    $and: [
+      {
+        userId: userId,
+      },
+      {
+        state: 'UPDATED',
+      },
+    ],
+  });
+  if(order) {
+    return order;
+  }
+  order = new Order({
     userId: userId,
     state: 'INITIAL',
     total: 0,
@@ -40,7 +53,7 @@ const updateOrder = async (orderId, sessionId, userId, seats) => {
 
 const submitOrder = async (orderId) => {
   const order = await Order.findOne({ '_id': orderId });
-  if(order) {
+  if(order && order.state === 'UPDATED') {
     order.state = 'SUBMITTED';
     await order.save();
 
@@ -52,5 +65,5 @@ const submitOrder = async (orderId) => {
 module.exports = {
   updateOrder,
   submitOrder,
-  createInitialOrder,
+  createInitialOrderOrGetCurrent,
 };
