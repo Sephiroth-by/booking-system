@@ -8,9 +8,14 @@ const getUserFromAuthHeader = async (req) => {
     return null;
   }
   token = token.split(' ')[1];
-  const decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
-  const user = await User.findOne({ email: decodedToken.email });
-  return user;
+  try {
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    const user = await User.findOne({ email: decodedToken.email });
+    return user;
+  }
+  catch (err) {
+    return null;
+  }
 };
 
 const authRequired = async (req, res, next) => {

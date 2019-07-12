@@ -3,7 +3,7 @@ const authMiddleware = require('../helpers/authMiddleware');
 const {removeUserReservation} = require('../helpers/sessionHelpers');
 const {reserveSeat, releaseSeat, expireCart} = require('../helpers/sessionHelpers');
 const {updateOrder, createInitialOrderOrGetCurrent} = require('../helpers/orderHelpers');
-const {submitOrder} = require('../helpers/orderHelpers');
+const {submitOrder, getOrders} = require('../helpers/orderHelpers');
 const GeneralError = require('../helpers/generalError');
 
 //Reserve seat
@@ -52,6 +52,19 @@ router.post('/', authMiddleware, async (req, res, next) => {
     return next(error);
   }
   res.json(order);
+});
+
+router.get('/', authMiddleware, async (req, res, next) => {
+  const orderType = req.query.type;
+  let orders = await getOrders(req.user._id);
+
+  if(orderType === 'past') {
+    orders = orders.filter((o) => o.session.startTime <= new Date());
+  }
+  else if(orderType === 'future') {
+    orders = orders.filter((o) => o.session.startTime >= new Date());
+  }
+  res.json(orders);
 });
 
 module.exports = router;
