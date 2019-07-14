@@ -111,26 +111,21 @@ const removeUserReservation = async (orderId) => {
 const expireCart = async (orderId) => {
   const order = await Order.findOne({'_id': orderId});
   if(order.state !== 'SUBMITTED') {
-    for(let i = 0; i < order.reservations.length; i++) {
-      let reservation = order.reservations[i];
-      let seats = reservation.seats;
-      let setSeatsSelection = {};
+    let seats = order.seats;
+    let setSeatsSelection = {};
 
-      for(let i = 0; i < seats.length; i++) {
-        setSeatsSelection['seats.' + seats[i][0] + '.' + seats[i][1]] = 0;
-      }
-
-      // Release seats and remove reservation
-      // eslint-disable-next-line no-await-in-loop
-      await Session.updateOne({
-        _id: reservation.sessionId,
-      },
-      {
-        $set: setSeatsSelection,
-        $inc: { seatsAvailable: seats.length },
-        $pull: { reservations: { orderId: order._id }},
-      });
+    for(let i = 0; i < seats.length; i++) {
+      setSeatsSelection['seats.' + seats[i][0] + '.' + seats[i][1]] = 0;
     }
+
+    await Session.updateOne({
+      _id: order.sessionId,
+    },
+    {
+      $set: setSeatsSelection,
+      $inc: { seatsAvailable: seats.length },
+      $pull: { reservations: { orderId: order._id }},
+    });
 
     order.state = 'EXPIRED';
 

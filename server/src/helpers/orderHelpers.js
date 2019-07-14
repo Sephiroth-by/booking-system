@@ -12,14 +12,13 @@ const createInitialOrderOrGetCurrent = async (userId) => {
       },
     ],
   });
-  if(order) {
+  if (order) {
     return order;
   }
   order = new Order({
     userId: userId,
     state: 'INITIAL',
     total: 0,
-    reservations: [],
     createdDate: new Date().toISOString(),
   });
 
@@ -35,13 +34,10 @@ const updateOrder = async (orderId, sessionId, userId, seats) => {
   const order = await Order.findOne({ '_id': orderId });
 
   if (session && order && order.userId.equals(userId)) {
-    order.reservations.push({
-      sessionId: sessionId,
-      seats: seats,
-      price: session.price,
-      total: session.price * seats.length,
-    });
-    order.total += session.price * seats.length;
+    order.sessionId = sessionId,
+    order.seats = seats,
+    order.price = session.price,
+    order.total = session.price * seats.length,
     order.modifiedOn = new Date().toISOString();
     order.state = 'UPDATED';
 
@@ -53,7 +49,7 @@ const updateOrder = async (orderId, sessionId, userId, seats) => {
 
 const submitOrder = async (orderId) => {
   const order = await Order.findOne({ '_id': orderId });
-  if(order && order.state === 'UPDATED') {
+  if (order && order.state === 'UPDATED') {
     order.state = 'SUBMITTED';
     await order.save();
 
@@ -62,8 +58,78 @@ const submitOrder = async (orderId) => {
   return null;
 };
 
+const getOrders = async (userId) => {
+  let orders = await Order.find({userId: userId,
+    state: 'SUBMITTED'}).lean();
+
+  if (!orders.length) {
+    return [];
+  }
+
+  const sessionIds = orders.map((o) => o.sessionId);
+
+  const sessions = await Session.aggregate([
+    {
+      $match: {
+        _id: {
+          $in: sessionIds,
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: 'cinemas',
+        localField: 'cinemaId',
+        foreignField: '_id',
+        as: 'cinema',
+      },
+    },
+    {
+      $lookup: {
+        from: 'movies',
+        localField: 'movieId',
+        foreignField: '_id',
+        as: 'movie',
+      },
+    },
+    {
+      $unwind: {
+        path: '$cinema',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $unwind: {
+        path: '$movie',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $project: {
+        seats: 0,
+        seatsAvailable: 0,
+        reservations: 0,
+        cinema: {
+          seats: 0,
+          seatsAvailable: 0,
+        },
+        movie: {
+          description: 0,
+        },
+      },
+    },
+  ]);
+
+  for (let i=0; i<orders.length; i++) {
+    orders[i].session = sessions.find((s) => s._id.equals(orders[i].sessionId));
+  }
+
+  return orders;
+};
+
 module.exports = {
   updateOrder,
   submitOrder,
   createInitialOrderOrGetCurrent,
+  getOrders,
 };
