@@ -3,15 +3,21 @@
         "ecmaVersion": 2018,
         "ecmaFeatures": {
             "jsx": true
-        }
+        },
+        "sourceType": "module"
     },
     "env": {
         "node": true,
-        "es6": true,
-        "commonjs": true
+        "browser": true,
+        "es6": true
     },
+    "parser": "babel-eslint",
+    "plugins": [
+        "react"
+    ],
     "extends": [
-        "eslint:recommended"
+        "eslint:recommended",
+        "plugin:react/recommended"
     ],
     "rules": {
         "no-var": "error",
@@ -39,7 +45,7 @@
         "no-case-declarations": "error",
         "no-class-assign": "error",
         "no-cond-assign": "error",
-        "no-console": "off",
+        "no-console": "warn",
         "no-const-assign": "error",
         "no-constant-condition": "warn",
         "no-debugger": "warn",
@@ -109,6 +115,16 @@
         "space-before-function-paren": ["warn", { "anonymous": "always", "named": "never", "asyncArrow": "always" }],
         "template-curly-spacing": ["warn", "never"],
         "template-tag-spacing": ["warn", "never"],
-        "use-isnan": "error"
+        "use-isnan": "error",
+
+        "react/jsx-no-bind": ["error", {
+            "allowArrowFunctions": true,
+            "allowBind": false,
+            "ignoreRefs": true
+        }],
+        "react/no-did-update-set-state": "error",
+        "react/no-unknown-property": "error",
+        "react/no-unused-prop-types": "error",
+        "react/prop-types": "error"
     }
 }
