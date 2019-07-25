@@ -188,3 +188,50 @@ export const authLogOut = () => (dispatch) => {
     type: ActionTypes.AUTH_LOG_OUT,
   });
 };
+
+export const fetchOrders = (type) => (dispatch) => {
+
+  dispatch(ordersLoading(true));
+
+  let endpoint = process.env.REACT_APP_API_URL + '/order';
+
+  if (type) {
+    endpoint += '?type=' + type;
+  }
+
+  return fetch(endpoint, {
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('token'),
+    },
+  })
+    .then(response => {
+      if (response.ok) {
+        return response;
+      }
+      let error = new Error('Error ' + response.status + ': ' + response.statusText);
+      error.response = response;
+      throw error;
+
+    },
+    error => {
+      let errmess = new Error(error.message);
+      throw errmess;
+    })
+    .then(response => response.json())
+    .then(orders => dispatch(addOrders(orders)))
+    .catch(error => dispatch(ordersFailed(error.message)));
+};
+
+export const ordersLoading = () => ({
+  type: ActionTypes.ORDERS_LOADING,
+});
+
+export const ordersFailed = (errmess) => ({
+  type: ActionTypes.ORDERS_FAILED,
+  payload: errmess,
+});
+
+export const addOrders = (orders) => ({
+  type: ActionTypes.ADD_ORDERS,
+  payload: orders,
+});

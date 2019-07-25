@@ -22,7 +22,7 @@ class Header extends Component {
     if(this.props.user.loggedIn) {
       links = <div>
         <Link to='/orders'>My Orders</Link>
-        <a href="#" onClick={this.props.authLogOut}>Log Out</a>
+        <button type='button' onClick={this.props.authLogOut}>Log Out</button>
       </div>;
     }
     else {

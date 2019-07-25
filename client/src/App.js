@@ -9,6 +9,7 @@ import Header from './components/HeaderComponent';
 import Footer from './components/FooterComponent';
 import Login from './components/LoginComponent';
 import Register from './components/RegisterComponent';
+import Orders from './components/OrdersComponent';
 
 const store = ConfigureStore();
 
@@ -21,6 +22,7 @@ class App extends Component {
             <Header />
             <Route path='/' exact component={Home} />
             <Route path='/movie/:movieId' component={Movie} />
+            <Route path='/orders' component={Orders} />
             <Route path='/login' component={Login} />
             <Route path='/register' component={Register} />
             <Footer />

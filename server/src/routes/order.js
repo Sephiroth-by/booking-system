@@ -30,7 +30,7 @@ router.put('/', authMiddleware, async (req, res, next) => {
     });
   }
   else {
-    setTimeout(expireCart.bind(this, orderId), 30000);
+    setTimeout(expireCart.bind(this, orderId), 900000);
     res.json({
       success: true,
       order: order,

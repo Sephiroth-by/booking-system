@@ -5,12 +5,14 @@ import thunk from 'redux-thunk';
 import { Movies } from './movies';
 import { Movie } from './movie';
 import { User } from './user';
+import { Orders } from './orders';
 
 export const ConfigureStore = () => {
   const store = createStore(combineReducers({
     movies: Movies,
     movie: Movie,
     user: User,
+    orders: Orders,
   }), composeWithDevTools(applyMiddleware(thunk))
   );
 
