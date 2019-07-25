@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const User = require('../models/User');
 const GeneralError = require('../helpers/generalError');
+const authMiddleware = require('../helpers/authMiddleware');
 
 router.post('/register', async (req, res, next) => {
   const { email, password } = req.body;
@@ -46,6 +47,12 @@ router.post('/login', async (req, res, next) => {
     let error = new GeneralError('Wrong password', 400);
     return next(error);
   }
+
+  res.json(user.toAuthJSON());
+});
+
+router.get('/', authMiddleware, async (req, res, next) => {
+  const user = req.user;
 
   res.json(user.toAuthJSON());
 });

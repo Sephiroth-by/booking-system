@@ -82,3 +82,70 @@ export const addMovie = (movie) => ({
   payload: movie,
 });
 
+export const checkToken = (id) => (dispatch) => {
+
+  let endpoint = process.env.REACT_APP_API_URL + '/auth';
+
+  return fetch(endpoint, {
+    headers: {
+      'Authorization': 'Bearer' + localStorage.getItem('token'),
+    },
+  })
+    .then(response => {
+      if (response.ok) {
+        return response;
+      }
+      let error = new Error('Error ' + response.status + ': ' + response.statusText);
+      error.response = response;
+      throw error;
+    },
+    error => {
+      let errmess = new Error(error.message);
+      throw errmess;
+    })
+    .then(response => response.json())
+    .then(user => dispatch(authSuccess(user.email)))
+    .catch(error => dispatch(authError(error.message)));
+};
+
+export const authSuccess = (email) => ({
+  type: ActionTypes.AUTH_SUCCESS,
+  payload: email,
+});
+
+export const authError = (errmess) => ({
+  type: ActionTypes.AUTH_ERROR,
+  payload: errmess,
+});
+
+export const login = (data) => (dispatch) => {
+
+  let endpoint = process.env.REACT_APP_API_URL + '/auth/login';
+
+  return fetch(endpoint, {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+    .then(response => {
+      if (response.ok) {
+        return response;
+      }
+      let error = new Error('Error ' + response.status + ': ' + response.statusText);
+      error.response = response;
+      throw error;
+    },
+    error => {
+      let errmess = new Error(error.message);
+      throw errmess;
+    })
+    .then(response => response.json())
+    .then(user => {
+      localStorage.setItem('token', user.token);
+      dispatch(authSuccess(user.email));
+    })
+    .catch(error => dispatch(authError(error.message)));
+};
+
