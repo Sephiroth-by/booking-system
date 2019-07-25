@@ -6,8 +6,8 @@ const mongoose = require('mongoose');
 const routes = require('./routes');
 const app = express();
 
-// const dbPopulate = require('./helpers/dbPopulate');
-// dbPopulate();
+const dbPopulate = require('./helpers/dbPopulate');
+dbPopulate();
 
 mongoose.connect('mongodb://localhost:27017/bookingdb', { useNewUrlParser: true });
 
@@ -17,9 +17,9 @@ app.use(express.json());
 app.use('/api', routes);
 
 app.use((err, req, res, next) => {
+  res.statusMessage = err.message;
   res.status(err.status).json({
     ...err,
-    message: err.message,
   });
 });
 

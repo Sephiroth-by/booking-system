@@ -16,6 +16,11 @@ export const User = (state = {
       loggedIn: false,
       email: null,
       errMess: action.payload };
+  case ActionTypes.AUTH_LOG_OUT:
+    return { ...state,
+      loggedIn: false,
+      email: null,
+      errMess: null };
   default:
     return state;
   }

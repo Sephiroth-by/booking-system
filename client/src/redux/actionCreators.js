@@ -88,7 +88,7 @@ export const checkToken = (id) => (dispatch) => {
 
   return fetch(endpoint, {
     headers: {
-      'Authorization': 'Bearer' + localStorage.getItem('token'),
+      'Authorization': 'Bearer ' + localStorage.getItem('token'),
     },
   })
     .then(response => {
@@ -105,7 +105,7 @@ export const checkToken = (id) => (dispatch) => {
     })
     .then(response => response.json())
     .then(user => dispatch(authSuccess(user.email)))
-    .catch(error => dispatch(authError(error.message)));
+    .catch(error => dispatch(authError('')));
 };
 
 export const authSuccess = (email) => ({
@@ -118,7 +118,7 @@ export const authError = (errmess) => ({
   payload: errmess,
 });
 
-export const login = (data) => (dispatch) => {
+export const login = (data, ownProps) => (dispatch) => {
 
   let endpoint = process.env.REACT_APP_API_URL + '/auth/login';
 
@@ -144,8 +144,47 @@ export const login = (data) => (dispatch) => {
     .then(response => response.json())
     .then(user => {
       localStorage.setItem('token', user.token);
+      ownProps.history.push('/');
       dispatch(authSuccess(user.email));
     })
     .catch(error => dispatch(authError(error.message)));
 };
 
+export const register = (data, ownProps) => (dispatch) => {
+
+  let endpoint = process.env.REACT_APP_API_URL + '/auth/register';
+
+  return fetch(endpoint, {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+    .then(response => {
+      if (response.ok) {
+        return response;
+      }
+      let error = new Error('Error ' + response.status + ': ' + response.statusText);
+      error.response = response;
+      throw error;
+    },
+    error => {
+      let errmess = new Error(error.message);
+      throw errmess;
+    })
+    .then(response => response.json())
+    .then(user => {
+      localStorage.setItem('token', user.token);
+      ownProps.history.push('/');
+      dispatch(authSuccess(user.email));
+    })
+    .catch(error => dispatch(authError(error.message)));
+};
+
+export const authLogOut = () => (dispatch) => {
+  localStorage.removeItem('token');
+  dispatch({
+    type: ActionTypes.AUTH_LOG_OUT,
+  });
+};

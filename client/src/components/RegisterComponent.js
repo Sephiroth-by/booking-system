@@ -1,6 +1,7 @@
-import React, { Component } from 'react';
-import { Redirect} from 'react-router-dom';
-import { checkToken } from '../redux/actionCreators';
+import React, {Component } from 'react';
+import { Formik, Field, Form, ErrorMessage } from 'formik';
+import * as yup from 'yup';
+import { register } from '../redux/actionCreators';
 import { connect } from 'react-redux';
 
 const mapStateToProps = state => ({
@@ -8,33 +9,47 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  checkToken: () => { dispatch(checkToken()); },
+  register: (data, props) => { dispatch(register(data, props)); },
 });
 
 class Register extends Component {
-
-  constructor(props) {
-    super(props);
-    this.state = {
-
-    };
-  }
-
-
-  componentDidMount() {
-    this.props.checkToken();
-  }
-
   render() {
-    if(this.props.user.loggedIn) {
-      return <Redirect to='/'/>;
-    }
     return (
-      <div></div>
+      <Formik
+        initialValues={{
+          email: '',
+          password: '',
+        }}
+        validationSchema={yup.object().shape({
+          email: yup
+            .string()
+            .email()
+            .required(),
+          password: yup
+            .string()
+            .min(6)
+            .max(16)
+            .required(),
+        })}
+        onSubmit={values => {
+          this.props.register(values, this.props);
+        }}
+        render={({ errors, status, touched }) => (
+          <Form>
+            <p style={{color: 'red'}}>{this.props.user.errMess}</p>
+            <Field type="text" name="email" placeholder="email" />
+            <ErrorMessage name="email" />
+            <Field type="password" name="password" placeholder="password" />
+            <ErrorMessage name="password" />
+            <button type="submit"> Submit </button>
+          </Form>
+        )}
+      />
     );
   }
 }
 
-
-export default connect(mapStateToProps, mapDispatchToProps)(Register);
-
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(Register);
