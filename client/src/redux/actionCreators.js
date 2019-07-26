@@ -235,3 +235,115 @@ export const addOrders = (orders) => ({
   type: ActionTypes.ADD_ORDERS,
   payload: orders,
 });
+
+export const cinemaSelected = (cinema) => ({
+  type: ActionTypes.MOVIE_CINEMA_SELECTED,
+  payload: cinema,
+});
+
+export const dateSelected = (date) => ({
+  type: ActionTypes.MOVIE_DATE_SELECTED,
+  payload: date,
+});
+
+export const timeSelected = (time) => ({
+  type: ActionTypes.MOVIE_TIME_SELECTED,
+  payload: time,
+});
+
+export const seatSelected = (seats) => ({
+  type: ActionTypes.MOVIE_SEATS_SELECTED,
+  payload: seats,
+});
+
+export const seatRemoved = (seat) => ({
+  type: ActionTypes.MOVIE_SEATS_REMOVED,
+  payload: seat,
+});
+
+export const orderSaving = (sessionId, seats, ownProps) => (dispatch) => {
+  let endpoint = process.env.REACT_APP_API_URL + '/order';
+
+  return fetch(endpoint, {
+    method: 'PUT',
+    body: JSON.stringify({
+      sessionId: sessionId,
+      seats: seats,
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('token'),
+    },
+  })
+    .then(response => {
+      if (response.ok) {
+        return response;
+      }
+      let error = new Error('Error ' + response.status + ': ' + response.statusText);
+      error.response = response;
+      throw error;
+    },
+    error => {
+      let errmess = new Error(error.message);
+      throw errmess;
+    })
+    .then(response => response.json())
+    .then(order => {
+      ownProps.history.push('/confirmation');
+      dispatch(orderSaveSuccess(order));
+    })
+    .catch(error => dispatch(orderSaveFailed(error.message)));
+};
+
+export const orderSaveFailed = (errmess) => ({
+  type: ActionTypes.ORDER_SAVE_FAILED,
+  payload: errmess,
+});
+
+export const orderSaveSuccess = (order) => ({
+  type: ActionTypes.ORDER_SAVE_SUCCESS,
+  payload: order,
+});
+
+export const orderSubmiting = (orderId, ownProps) => (dispatch) => {
+  let endpoint = process.env.REACT_APP_API_URL + '/order';
+
+  return fetch(endpoint, {
+    method: 'POST',
+    body: JSON.stringify({
+      orderId: orderId,
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('token'),
+    },
+  })
+    .then(response => {
+      if (response.ok) {
+        return response;
+      }
+      let error = new Error('Error ' + response.status + ': ' + response.statusText);
+      error.response = response;
+      throw error;
+    },
+    error => {
+      let errmess = new Error(error.message);
+      throw errmess;
+    })
+    .then(response => response.json())
+    .then(order => {
+      ownProps.history.push('/');
+      dispatch(orderSubmitSuccess(order));
+    })
+    .catch(error => dispatch(orderSubmitFailed(error.message)));
+};
+
+export const orderSubmitFailed = (errmess) => ({
+  type: ActionTypes.ORDER_SUBMITING_FAILED,
+  payload: errmess,
+});
+
+export const orderSubmitSuccess = (order) => ({
+  type: ActionTypes.ORDER_SUBMITING_SUCCESS,
+  payload: order,
+});

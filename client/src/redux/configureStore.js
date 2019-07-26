@@ -6,6 +6,7 @@ import { Movies } from './movies';
 import { Movie } from './movie';
 import { User } from './user';
 import { Orders } from './orders';
+import { Order } from './order';
 
 export const ConfigureStore = () => {
   const store = createStore(combineReducers({
@@ -13,6 +14,7 @@ export const ConfigureStore = () => {
     movie: Movie,
     user: User,
     orders: Orders,
+    order: Order,
   }), composeWithDevTools(applyMiddleware(thunk))
   );
 

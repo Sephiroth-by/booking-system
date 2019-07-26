@@ -10,6 +10,7 @@ import Footer from './components/FooterComponent';
 import Login from './components/LoginComponent';
 import Register from './components/RegisterComponent';
 import Orders from './components/OrdersComponent';
+import Confirmation from './components/ConfirmationComponent';
 
 const store = ConfigureStore();
 
@@ -23,6 +24,7 @@ class App extends Component {
             <Route path='/' exact component={Home} />
             <Route path='/movie/:movieId' component={Movie} />
             <Route path='/orders' component={Orders} />
+            <Route path='/confirmation' component={Confirmation} />
             <Route path='/login' component={Login} />
             <Route path='/register' component={Register} />
             <Footer />
