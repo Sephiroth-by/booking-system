@@ -3,6 +3,8 @@ import {Link} from 'react-router-dom';
 import { fetchMovies } from '../redux/actionCreators';
 import { connect } from 'react-redux';
 
+import { Card, CardActionArea, CardActions, CardContent, CardMedia, Typography, TextField, withStyles } from '@material-ui/core';
+
 const mapStateToProps = state => ({
   movies: state.movies,
 });
@@ -10,6 +12,32 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = (dispatch) => ({
   fetchMovies: (term) => { dispatch(fetchMovies(term)); },
 });
+
+const styles = {
+  card: {
+    flexBasis: '25%',
+    padding: '10px',
+    margin: '10px',
+  },
+  media: {
+    height: 140,
+  },
+  grid: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+  },
+  link: {
+    textDecoration: 'none',
+  },
+  cardActions: {
+    justifyContent: 'center',
+  },
+  textField: {
+    width: '80%',
+  },
+};
 
 class Home extends Component {
 
@@ -39,26 +67,52 @@ class Home extends Component {
   }
 
   render() {
+    const classes = this.props.classes;
+
     const movies = this.props.movies.movies.map((movie) => (
-      <div key={movie._id}>
-        <Link to={`/movie/${movie._id}`}>{movie.name}</Link>
-      </div>
+      <Card key={movie._id} className={classes.card}>
+        <CardActionArea>
+          <CardMedia
+            className={classes.media}
+            image={require(`../../public${movie.poster}`)}
+          />
+          <CardContent>
+            <Typography gutterBottom variant="h5" component="h2">
+              {movie.name}
+            </Typography>
+            <Typography variant="body2" color="textSecondary" component="p">
+              {movie.description}
+            </Typography>
+          </CardContent>
+        </CardActionArea>
+        <CardActions className={classes.cardActions}>
+          <Link className={classes.link} to={`/movie/${movie._id}`}>{movie.name}</Link>
+        </CardActions>
+      </Card>
     ));
 
     return (
       <div>
-        <div>
-          <form onSubmit={this.handleSearch}>
-            <input type="text" value={this.state.term} onChange={this.handleChange} />
-          </form>
+        <form className={classes.container} noValidate autoComplete="off" onSubmit={this.handleSearch}>
+          <TextField
+            id="outlined-search"
+            label="Search Movie"
+            type="search"
+            className={classes.textField}
+            margin="normal"
+            variant="outlined"
+            value={this.state.term}
+            onChange={this.handleChange}
+          />
+        </form>
+        <div className={classes.grid}>
+          {movies}
         </div>
-        <h4>Home</h4>
-        {movies}
       </div>
     );
   }
 }
 
 
-export default connect(mapStateToProps, mapDispatchToProps)(Home);
+export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(Home));
 
