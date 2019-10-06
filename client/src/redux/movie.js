@@ -22,7 +22,7 @@ export const Movie = (state = {
       isLoading: false,
       movie: action.payload.movie,
       sessions: action.payload.sessions,
-      availableCinemas: action.payload.sessions.map(s => s.cinema.name),
+      availableCinemas: [...new Set(action.payload.sessions.map(s => s.cinema.name))],
     };
   case ActionTypes.MOVIE_LOADING:
     return {
@@ -49,7 +49,7 @@ export const Movie = (state = {
   case ActionTypes.MOVIE_CINEMA_SELECTED:
     return {
       ...state,
-      availableDates: state.sessions.filter(s => s.cinema.name===action.payload).map(s => moment(s.startTime).format('DD MMM')),
+      availableDates: [...new Set(state.sessions.filter(s => s.cinema.name===action.payload).map(s => moment(s.startTime).format('DD MMM')))],
       selectedCinema: action.payload,
     };
   case ActionTypes.MOVIE_DATE_SELECTED:

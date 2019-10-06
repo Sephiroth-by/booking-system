@@ -18,22 +18,26 @@ const populateTestData = () => {
   });
   movie.save();
 
-  let today = new Date();
-  let sessionStartDate = new Date();
-  let sessionEndDate = new Date();
-  sessionStartDate.setDate(today.getDate() + 3);
-  sessionEndDate.setDate(sessionStartDate.getDate() + 1);
+  for(let i=0; i<10; i++) {
+    for(let j=0; j<10; j++) {
+      let sessionStartDate = new Date();
+      let sessionEndDate = new Date();
+      sessionStartDate.setHours(sessionStartDate.getHours()+i);
+      sessionStartDate.setDate(sessionStartDate.getDate() + j);
+      sessionEndDate.setDate(sessionStartDate.getDate() + 1);
 
-  let session = new Session({
-    cinemaId: cinema._id,
-    movieId: movie._id,
-    startTime: sessionStartDate.toISOString(),
-    endTime: sessionEndDate.toISOString(),
-    price: 10,
-    seats: [[0, 1, 0], [0, 1, 0], [0, 1, 0]],
-    seatsAvailable: 6,
-  });
-  session.save();
+      let session = new Session({
+        cinemaId: cinema._id,
+        movieId: movie._id,
+        startTime: sessionStartDate.toISOString(),
+        endTime: sessionEndDate.toISOString(),
+        price: 10,
+        seats: [[0, 1, 0], [0, 1, 0], [0, 1, 0]],
+        seatsAvailable: 6,
+      });
+      session.save();
+    }
+  }
 };
 
 module.exports = populateTestData;

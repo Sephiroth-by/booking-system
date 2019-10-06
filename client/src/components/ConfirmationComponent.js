@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Redirect} from 'react-router-dom';
 import { orderSubmiting } from '../redux/actionCreators';
 import { connect } from 'react-redux';
+import Button from '@material-ui/core/Button';
 
 const mapStateToProps = state => ({
   order: state.order,
@@ -42,7 +43,7 @@ class Orders extends Component {
         <p>{this.props.selectedDate}</p>
         <p>{this.props.selectedTime}</p>
         <p>Your seats: {this.props.selectedSeats.map(s => (<span key={s}>{`Row:${s[0] + 1}; Seat:${s[1] + 1}`}</span>))}</p>
-        <button type="button" onClick={this.onConfirmClicked}>Place Order</button>
+        <Button variant="contained" color="primary" onClick={this.onConfirmClicked}>Place Order</Button>
       </div>
     );
   }
